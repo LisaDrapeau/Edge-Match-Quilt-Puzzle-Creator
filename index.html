@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title></title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script
+      type="text/javascript"
+      src="/js/lib/dummy.js"      
+    ></script>
+
+    <style id="compiled-css" type="text/css">
+      body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#color-picker {
+    margin-bottom: 20px;
+}
+#grid-size-picker {
+    margin-bottom: 20px;
+}
+#duplicate-count {
+    margin-bottom: 20px;
+}
+#color-usage {
+    margin-bottom: 20px;
+}
+#color-usage-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    text-align: center;
+    justify-content: center;
+    overflow-x: auto; /* Add horizontal scrolling if needed */
+}
+.color-usage-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.color-swatch {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 5px;
+}
+#color-grid {
+    display: grid;
+    gap: 2px;
+}
+.cell {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #ccc;
+}
+svg {
+    width: 100%;
+    height: 100%;
+}
+      /* EOS */
+    </style>
+
+    <style type="text/css">
+      :root {
+        color-scheme: light;
+      }
+    </style>
+
+    <script id="insert"></script>
+
+  </head>
+  <body>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Color Grid</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Interactive Color Grid</h1>
+    <div id="color-picker">
+        <label for="colorInput">Choose a color:</label>
+        <input type="color" id="colorInput">
+    </div>
+    <div id="grid-size-picker">
+        <label for="gridWidth">Grid Width:</label>
+        <input type="number" id="gridWidth" value="14" min="1" max="20">
+        <label for="gridHeight">Grid Height:</label>
+        <input type="number" id="gridHeight" value="14" min="1" max="20">
+        <button id="updateGrid">Update Grid</button>
+    </div>
+    <div id="duplicate-count">Duplicate Combinations: 0</div>
+    <div id="color-usage">
+        <h2>Color Usage:</h2>
+        <div id="color-usage-grid"></div>
+    </div>
+    <div id="color-grid"></div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+  </body>
+
+    <script type="text/javascript">
+
+document.addEventListener('DOMContentLoaded', function () {
+    const colorGrid = document.getElementById('color-grid');
+    const colorInput = document.getElementById('colorInput');
+    const duplicateCount = document.getElementById('duplicate-count');
+    const colorUsageGrid = document.getElementById('color-usage-grid');
+    const gridWidthInput = document.getElementById('gridWidth');
+    const gridHeightInput = document.getElementById('gridHeight');
+    const updateGridButton = document.getElementById('updateGrid');
+    let selectedColor = '#000000';
+
+    colorInput.addEventListener('input', function () {
+        selectedColor = colorInput.value;
+    });
+
+    updateGridButton.addEventListener('click', function () {
+        const gridWidth = parseInt(gridWidthInput.value);
+        const gridHeight = parseInt(gridHeightInput.value);
+        createGrid(gridWidth, gridHeight);
+    });
+
+    function createGrid(width, height) {
+        colorGrid.innerHTML = ''; // Clear existing grid
+        colorGrid.style.gridTemplateColumns = `repeat(${width}, 50px)`;
+        colorGrid.style.gridTemplateRows = `repeat(${height}, 50px)`;
+
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+
+                // SVG with diagonal quadrants
+                const svg = `<svg viewBox="0 0 50 50">
+                                <polygon points="0,0 25,25 50,0" class="top" />
+                                <polygon points="50,0 25,25 50,50" class="right" />
+                                <polygon points="50,50 25,25 0,50" class="bottom" />
+                                <polygon points="0,50 25,25 0,0" class="left" />
+                             </svg>`;
+
+                cell.innerHTML = svg;
+                colorGrid.appendChild(cell);
+
+                cell.addEventListener('click', function (event) {
+                    if (event.target.tagName === 'polygon') {
+                        event.target.setAttribute('fill', selectedColor);
+                        updateColorUsage();
+                        checkForDuplicates();
+                    }
+                });
+            }
+        }
+
+        updateColorUsage();
+        checkForDuplicates(); // Initial check after grid creation
+    }
+
+    function updateColorUsage() {
+        const colorCounts = {};
+
+        document.querySelectorAll('.cell polygon').forEach(polygon => {
+            const color = polygon.getAttribute('fill') || 'none';
+            if (color !== 'none') {
+                colorCounts[color] = (colorCounts[color] || 0) + 1;
+            }
+        });
+
+        colorUsageGrid.innerHTML = '';
+        for (const [color, count] of Object.entries(colorCounts)) {
+            const usageCell = document.createElement('div');
+            usageCell.classList.add('color-usage-cell');
+
+            const colorSwatch = document.createElement('div');
+            colorSwatch.classList.add('color-swatch');
+            colorSwatch.style.backgroundColor = color;
+
+            const colorCount = document.createElement('div');
+            colorCount.innerText = count;
+
+            usageCell.appendChild(colorSwatch);
+            usageCell.appendChild(colorCount);
+            colorUsageGrid.appendChild(usageCell);
+        }
+    }
+
+    function checkForDuplicates() {
+        const cells = document.querySelectorAll('.cell');
+        const combinations = new Set();
+        let duplicateCountValue = 0;
+
+        cells.forEach(cell => {
+            const polygons = cell.querySelectorAll('polygon');
+            const colors = Array.from(polygons).map(p => p.getAttribute('fill') || 'none');
+            const filteredColors = colors.filter(color => color !== 'none' && color !== '#000000');
+
+            if (filteredColors.length === 4) {
+                const sortedColors = filteredColors.sort().join(',');
+                if (combinations.has(sortedColors)) {
+                    duplicateCountValue++;
+                } else {
+                    combinations.add(sortedColors);
+                }
+            }
+        });
+
+        duplicateCount.innerText = `Duplicate Combinations: ${duplicateCountValue}`;
+    }
+
+    createGrid(14, 14); // Initial grid
+});
+
+  </script>
+
+  <script>
+    // tell the embed parent frame the height of the content
+    if (window.parent && window.parent.parent){
+      window.parent.parent.postMessage(["resultsFrame", {
+        height: document.body.getBoundingClientRect().height,
+        slug: "81dt9Lg2"
+      }], "*")
+    }
+
+    // always overwrite window.name, in case users try to set it manually
+    window.name = "result"
+  </script>
+
+  <script>
+    const allLines = []
+    const cssElement = document.querySelector("#compiled-css")
+
+    window.addEventListener("message", (message) => {
+
+      if (message.data.css){
+        cssElement.textContent = message.data.css.payload
+      }
+
+      if (message.data.html){
+        document.body.innerHTML = message.data.html.payload
+      }
+    })
+  </script>
+</html
