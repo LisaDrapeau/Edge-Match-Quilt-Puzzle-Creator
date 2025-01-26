@@ -81,6 +81,12 @@
             const updateGridButton = document.getElementById('updateGrid');
             let selectedColor = '#000000';
 
+            // Retrieve grid size from localStorage
+            const savedGridWidth = localStorage.getItem('gridWidth') || 14;
+            const savedGridHeight = localStorage.getItem('gridHeight') || 14;
+            gridWidthInput.value = savedGridWidth;
+            gridHeightInput.value = savedGridHeight;
+
             colorInput.addEventListener('input', function () {
                 selectedColor = colorInput.value;
             });
@@ -88,6 +94,11 @@
             updateGridButton.addEventListener('click', function () {
                 const gridWidth = parseInt(gridWidthInput.value);
                 const gridHeight = parseInt(gridHeightInput.value);
+
+                // Save grid size to localStorage
+                localStorage.setItem('gridWidth', gridWidth);
+                localStorage.setItem('gridHeight', gridHeight);
+
                 createGrid(gridWidth, gridHeight);
             });
 
@@ -177,9 +188,8 @@
                 duplicateCount.innerText = `Duplicate Combinations: ${duplicateCountValue}`;
             }
 
-            createGrid(14, 14); // Initial grid
+            createGrid(savedGridWidth, savedGridHeight); // Initial grid
         });
     </script>
 </body>
 </html>
-
